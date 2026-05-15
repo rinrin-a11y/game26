@@ -1,354 +1,258 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Magical Poly Puzzle - Difficulty</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700&display=swap');
-        
-        body { 
-            background-color: #fffafc;
-            color: #ff9aaf; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            font-family: 'M PLUS Rounded 1c', sans-serif;
-            margin: 0;
-            padding: 10px;
-            overflow: hidden;
-            touch-action: none;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Magical Poly Puzzle Mobile</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700&display=swap');
+        
+        body { 
+            background-color: #fffafc; /* メルヘンな無地背景 */
+            color: #ff9aaf; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            margin: 0;
+            padding: 10px;
+            overflow: hidden;
+            touch-action: none; /* スマホのスクロールを防止 */
+        }
 
-        /* スタート画面 */
-        #start-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #fffafc; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 100;
-        }
-        .diff-btn {
-            margin: 10px; width: 200px; padding: 15px; border-radius: 30px;
-            border: none; color: white; font-size: 20px; font-family: inherit;
-            cursor: pointer; transition: transform 0.2s;
-        }
-        .easy { background: #ffb8d1; }
-        .normal { background: #ff708e; }
-        .hard { background: #d45d79; }
-        .diff-btn:active { transform: scale(0.95); }
+        .header-info {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 10px;
+        }
 
-        .header-info {
-            display: flex; justify-content: space-between;
-            width: 100%; max-width: 400px; margin-bottom: 10px; gap: 10px;
-        }
+        #canvas-container {
+            position: relative;
+            background-color: #ffffff;
+            border: 6px solid #ffedf2;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(255, 182, 193, 0.2);
+            overflow: hidden;
+            max-width: 95vw;
+        }
 
-        #canvas-container {
-            position: relative; background-color: #ffffff;
-            border: 6px solid #ffedf2; border-radius: 20px;
-            box-shadow: 0 8px 20px rgba(255, 182, 193, 0.2);
-            overflow: hidden; max-width: 95vw;
-        }
+        canvas { display: block; }
 
-        canvas { display: block; margin: 0 auto; }
+        .card {
+            background: white; border: 3px solid #ffecf2;
+            border-radius: 15px; padding: 5px 10px; text-align: center;
+        }
 
-        .card {
-            background: white; border: 3px solid #ffecf2;
-            border-radius: 15px; padding: 5px; text-align: center; flex: 1;
-        }
-        .label { font-size: 10px; color: #ffb3c6; margin-bottom: 2px; }
-        #score { font-size: 18px; color: #ff5e91; }
-        .preview-canvas { width: 40px; height: 40px; }
+        .label { font-size: 10px; color: #ffb3c6; }
+        #score { font-size: 20px; color: #ff5e91; }
+        
+        /* 下部の進化表 */
+        #evo-chart {
+            margin-top: 10px; background: white; border: 3px solid #ffecf2;
+            border-radius: 15px; padding: 8px; display: flex; align-items: center; 
+            gap: 5px; max-width: 95vw; overflow-x: auto;
+        }
+        .evo-item { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+        .evo-shape { border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .arrow { color: #ffd1dc; font-size: 14px; }
 
-        #evo-chart {
-            margin-top: 10px; background: white; border: 3px solid #ffecf2;
-            border-radius: 15px; padding: 8px; display: flex; align-items: center; 
-            gap: 5px; max-width: 95vw; overflow-x: auto;
-        }
-        .evo-item { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
-        .evo-shape { border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .arrow { color: #ffd1dc; font-size: 14px; }
+        #game-over-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.9); display: none;
+            flex-direction: column; align-items: center; justify-content: center; z-index: 10;
+        }
 
-        #game-over-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.9); display: none;
-            flex-direction: column; align-items: center; justify-content: center; z-index: 10;
-        }
-        .game-btn {
-            background: #ff708e; color: white; border: none; padding: 12px 24px;
-            border-radius: 20px; cursor: pointer; font-family: inherit; font-size: 18px;
-        }
-    </style>
+        button {
+            background: #ff708e; color: white; border: none; padding: 12px 24px;
+            border-radius: 20px; cursor: pointer; font-family: inherit; font-size: 18px;
+        }
+    </style>
 </head>
 <body>
+    <div class="header-info">
+        <div class="card">
+            <div class="label">SCORE</div>
+            <div id="score">0</div>
+        </div>
+        <div class="card" style="min-width: 60px;">
+            <div class="label">NEXT</div>
+            <canvas id="nextCanvas" width="50" height="50"></canvas>
+        </div>
+    </div>
+    
+    <div id="canvas-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="game-over-screen">
+            <h2 style="color:#ff708e;">Full!</h2>
+            <button onclick="location.reload()">もういちど遊ぶ</button>
+        </div>
+    </div>
 
-    <div id="start-screen">
-        <h1 style="color:#ff708e; margin-bottom:30px;">Magical Puzzle</h1>
-        <button class="diff-btn easy" onclick="startGame('easy')">やさしい</button>
-        <button class="diff-btn normal" onclick="startGame('normal')">ふつう</button>
-        <button class="diff-btn hard" onclick="startGame('hard')">むずかしい</button>
-    </div>
-
-    <div class="header-info">
-        <div class="card" id="hold-btn" style="cursor: pointer;">
-            <div class="label">HOLD</div>
-            <canvas id="holdCanvas" class="preview-canvas" width="50" height="50"></canvas>
-        </div>
-        <div class="card">
-            <div class="label">SCORE</div>
-            <div id="score">0</div>
-        </div>
-        <div class="card">
-            <div class="label">NEXT</div>
-            <canvas id="nextCanvas" class="preview-canvas" width="50" height="50"></canvas>
-        </div>
-    </div>
-    
-    <div id="canvas-container">
-        <canvas id="gameCanvas"></canvas>
-        <div id="game-over-screen">
-            <h2 style="color:#ff708e;">Full!</h2>
-            <button class="game-btn" onclick="location.reload()">タイトルへ</button>
-        </div>
-    </div>
-
-    <div id="evo-chart"></div>
+    <div id="evo-chart"></div>
 
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const nextCanvas = document.getElementById('nextCanvas');
 const nctx = nextCanvas.getContext('2d');
-const holdCanvas = document.getElementById('holdCanvas');
-const hctx = holdCanvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const gameOverScreen = document.getElementById('game-over-screen');
 
-let width, height;
+// 画面サイズに合わせる
+const width = Math.min(window.innerWidth * 0.9, 360);
+const height = Math.min(window.innerHeight * 0.6, 500);
+canvas.width = width;
+canvas.height = height;
+
 let score = 0;
 let objects = [];
 let particles = [];
-let currentType, nextType, holdType = null;
-let canHold = true;
-let currentX;
+let currentType = 0;
+let nextType = Math.floor(Math.random() * 3);
+let currentX = width / 2;
 let isGameOver = false;
 let gameOverCounter = 0;
 let isTouching = false;
-let gameStarted = false;
-let maxSpawnType = 3; // 初期出現する図形の種類
 
-const TYPES_DATA = [
-    { r_rel: 0.06, color: '#ffcad4', sides: 0, face: '•◡•', score: 1 }, 
-    { r_rel: 0.08, color: '#fbc4ab', sides: 3, face: '^◡^', score: 2 }, 
-    { r_rel: 0.11, color: '#fef9c3', sides: 4, face: '◕◡◕', score: 4 }, 
-    { r_rel: 0.14, color: '#c1f0cf', sides: 5, face: 'v◡v', score: 8 }, 
-    { r_rel: 0.18, color: '#b8e1ff', sides: 6, face: '✧◡✧', score: 16 }, 
-    { r_rel: 0.24, color: '#dcd6f7', sides: 7, face: '♥◡♥', score: 32 }  
+const TYPES = [
+    { r: width*0.05, color: '#ffcad4', sides: 0, face: '•◡•', score: 1 }, 
+    { r: width*0.07, color: '#fbc4ab', sides: 3, face: '^◡^', score: 2 }, 
+    { r: width*0.10, color: '#fef9c3', sides: 4, face: '◕◡◕', score: 4 }, 
+    { r: width*0.13, color: '#c1f0cf', sides: 5, face: 'v◡v', score: 8 }, 
+    { r: width*0.17, color: '#b8e1ff', sides: 6, face: '✧◡✧', score: 16 }, 
+    { r: width*0.23, color: '#dcd6f7', sides: 7, face: '♥◡♥', score: 32 }  
 ];
-let TYPES = [];
 
-function startGame(diff) {
-    document.getElementById('start-screen').style.display = 'none';
-    
-    // 難易度設定
-    let containerWidth = 360;
-    if (diff === 'easy') {
-        containerWidth = 400;
-        maxSpawnType = 2; // 丸か三角のみ
-    } else if (diff === 'hard') {
-        containerWidth = 300;
-        maxSpawnType = 4; // 五角形まで出る
-    }
-
-    width = Math.min(window.innerWidth * 0.95, containerWidth);
-    height = Math.min(window.innerHeight * 0.65, 550);
-    canvas.width = width;
-    canvas.height = height;
-    currentX = width / 2;
-
-    // 図形サイズ再計算
-    TYPES = TYPES_DATA.map(t => ({
-        ...t,
-        r: width * t.r_rel
-    }));
-
-    initEvoChart();
-    currentType = Math.floor(Math.random() * maxSpawnType);
-    nextType = Math.floor(Math.random() * maxSpawnType);
-    drawPreview(nctx, nextType);
-    gameStarted = true;
-    loop();
-}
-
-function initEvoChart() {
-    const chart = document.getElementById('evo-chart');
-    chart.innerHTML = '';
-    TYPES.forEach((t, i) => {
-        const item = document.createElement('div');
-        item.className = 'evo-item';
-        const size = 15 + i * 3;
-        const clip = t.sides === 0 ? 'none' : getPolyClip(t.sides);
-        item.innerHTML = `<div class="evo-shape" style="width:${size}px; height:${size}px; background:${t.color}; clip-path:${clip}; border-radius:${t.sides===0?'50%':'3px'}"></div>`;
-        chart.appendChild(item);
-        if(i < TYPES.length - 1) chart.innerHTML += '<div class="arrow">→</div>';
-    });
-}
+// 進化表の生成
+const chart = document.getElementById('evo-chart');
+TYPES.forEach((t, i) => {
+    const item = document.createElement('div');
+    item.className = 'evo-item';
+    const size = 15 + i * 3;
+    const clip = t.sides === 0 ? 'none' : getPolyClip(t.sides);
+    item.innerHTML = `<div class="evo-shape" style="width:${size}px; height:${size}px; background:${t.color}; clip-path:${clip}; border-radius:${t.sides===0?'50%':'3px'}"></div>`;
+    chart.appendChild(item);
+    if(i < TYPES.length - 1) chart.innerHTML += '<div class="arrow">→</div>';
+});
 
 function getPolyClip(s) {
-    let pts = [];
-    for(let i=0; i<s; i++) {
-        let a = (i/s) * Math.PI * 2 - Math.PI/2;
-        pts.push(`${50+50*Math.cos(a)}% ${50+50*Math.sin(a)}%`);
-    }
-    return `polygon(${pts.join(',')})`;
+    let pts = [];
+    for(let i=0; i<s; i++) {
+        let a = (i/s) * Math.PI * 2 - Math.PI/2;
+        pts.push(`${50+50*Math.cos(a)}% ${50+50*Math.sin(a)}%`);
+    }
+    return `polygon(${pts.join(',')})`;
 }
 
 class Particle {
-    constructor(x, y, color) {
-        this.x = x; this.y = y; this.color = color;
-        this.vx = (Math.random() - 0.5) * 8;
-        this.vy = (Math.random() - 0.5) * 8;
-        this.life = 1.0;
-    }
-    update() { this.x += this.vx; this.y += this.vy; this.life -= 0.04; }
-    draw() {
-        ctx.globalAlpha = this.life; ctx.fillStyle = this.color;
-        ctx.beginPath(); ctx.arc(this.x, this.y, 3, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1;
-    }
+    constructor(x, y, color) {
+        this.x = x; this.y = y; this.color = color;
+        this.vx = (Math.random() - 0.5) * 8;
+        this.vy = (Math.random() - 0.5) * 8;
+        this.life = 1.0;
+    }
+    update() { this.x += this.vx; this.y += this.vy; this.life -= 0.04; }
+    draw() {
+        ctx.globalAlpha = this.life; ctx.fillStyle = this.color;
+        ctx.beginPath(); ctx.arc(this.x, this.y, 3, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1;
+    }
 }
 
 class GameObject {
-    constructor(x, y, typeIndex, isStatic = false) {
-        this.x = x; this.y = y; this.typeIndex = typeIndex;
-        const t = TYPES[typeIndex];
-        this.r = t.r; this.color = t.color; this.sides = t.sides; this.face = t.face;
-        this.vx = 0; this.vy = 0; this.rotation = 0; this.vr = 0;
-        this.isStatic = isStatic;
-        this.mass = (typeIndex + 1);
-    }
+    constructor(x, y, typeIndex, isStatic = false) {
+        this.x = x; this.y = y; this.typeIndex = typeIndex;
+        const t = TYPES[typeIndex];
+        this.r = t.r; this.color = t.color; this.sides = t.sides; this.face = t.face;
+        this.vx = 0; this.vy = 0; this.rotation = 0; this.vr = 0;
+        this.isStatic = isStatic;
+    }
 
-    draw(targetCtx = ctx) {
-        targetCtx.save();
-        targetCtx.translate(this.x, this.y);
-        targetCtx.rotate(this.rotation);
-        targetCtx.fillStyle = this.color;
-        targetCtx.beginPath();
-        if (this.sides === 0) targetCtx.arc(0, 0, this.r, 0, Math.PI * 2);
-        else {
-            for(let i=0; i<this.sides; i++) {
-                const a = (i / this.sides) * Math.PI * 2 - Math.PI / 2;
-                targetCtx.lineTo(this.r * 1.1 * Math.cos(a), this.r * 1.1 * Math.sin(a));
-            }
-        }
-        targetCtx.closePath();
-        targetCtx.fill();
-        targetCtx.strokeStyle = 'white'; targetCtx.lineWidth = 3; targetCtx.stroke();
-        targetCtx.rotate(-this.rotation);
-        targetCtx.fillStyle = '#8a6d71';
-        targetCtx.font = `bold ${this.r * 0.5}px sans-serif`;
-        targetCtx.textAlign = 'center'; targetCtx.textBaseline = 'middle';
-        targetCtx.fillText(this.face, 0, 0);
-        targetCtx.restore();
-    }
+    draw(targetCtx = ctx) {
+        targetCtx.save();
+        targetCtx.translate(this.x, this.y);
+        targetCtx.rotate(this.rotation);
+        targetCtx.fillStyle = this.color;
+        targetCtx.beginPath();
+        if (this.sides === 0) targetCtx.arc(0, 0, this.r, 0, Math.PI * 2);
+        else {
+            for(let i=0; i<this.sides; i++) {
+                const a = (i / this.sides) * Math.PI * 2 - Math.PI / 2;
+                targetCtx.lineTo(this.r * 1.1 * Math.cos(a), this.r * 1.1 * Math.sin(a));
+            }
+        }
+        targetCtx.closePath();
+        targetCtx.fill();
+        targetCtx.strokeStyle = 'white'; targetCtx.lineWidth = 3; targetCtx.stroke();
+        targetCtx.rotate(-this.rotation);
+        targetCtx.fillStyle = '#8a6d71';
+        targetCtx.font = `bold ${this.r * 0.5}px sans-serif`;
+        targetCtx.textAlign = 'center'; targetCtx.textBaseline = 'middle';
+        targetCtx.fillText(this.face, 0, 0);
+        targetCtx.restore();
+    }
 
-    update() {
-        if (this.isStatic) return;
-        this.vy += 0.6;
-        this.vx *= 0.99; this.vy *= 0.99;
-        if (Math.abs(this.vx) < 0.05) this.vx = 0;
-        if (Math.abs(this.vy) < 0.05 && this.y > canvas.height - this.r - 2) this.vy = 0;
-        this.x += this.vx; this.y += this.vy;
-        this.rotation += this.vr; this.vr *= 0.96;
-        if (this.x < this.r) { this.x = this.r; this.vx *= -0.2; }
-        if (this.x > canvas.width - this.r) { this.x = canvas.width - this.r; this.vx *= -0.2; }
-        if (this.y > canvas.height - this.r) { 
-            this.y = canvas.height - this.r; this.vy *= -0.1; this.vr = this.vx * 0.05; 
-        }
-    }
+    update() {
+        if (this.isStatic) return;
+        this.vy += 0.4; this.x += this.vx; this.y += this.vy;
+        this.rotation += this.vr; this.vx *= 0.99;
+        if (this.x < this.r) { this.x = this.r; this.vx *= -0.2; }
+        if (this.x > canvas.width - this.r) { this.x = canvas.width - this.r; this.vx *= -0.2; }
+        if (this.y > canvas.height - this.r) { 
+            this.y = canvas.height - this.r; this.vy *= -0.1; this.vr = this.vx * 0.05; 
+        }
+    }
 }
 
-function solveCollisions() {
-    for (let step = 0; step < 4; step++) {
-        for (let i = 0; i < objects.length; i++) {
-            for (let j = i + 1; j < objects.length; j++) {
-                const a = objects[i]; const b = objects[j];
-                const dx = b.x - a.x; const dy = b.y - a.y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                const minDist = a.r + b.r;
-                if (dist < minDist) {
-                    if (a.typeIndex === b.typeIndex && step === 0) {
-                        handleEvolution(a, b); return; 
-                    }
-                    const angle = Math.atan2(dy, dx);
-                    const overlap = minDist - dist;
-                    const totalMass = a.mass + b.mass;
-                    a.x -= Math.cos(angle) * overlap * (b.mass / totalMass) * 0.25;
-                    a.y -= Math.sin(angle) * overlap * (b.mass / totalMass) * 0.25;
-                    b.x += Math.cos(angle) * overlap * (a.mass / totalMass) * 0.25;
-                    b.y += Math.sin(angle) * overlap * (a.mass / totalMass) * 0.25;
-                    const friction = 0.08;
-                    a.vx += (b.vx - a.vx) * friction; b.vx += (a.vx - b.vx) * friction;
-                }
-            }
-        }
-    }
+function drawNext() {
+    nctx.clearRect(0, 0, 50, 50);
+    nctx.save(); nctx.translate(25, 25);
+    const scale = Math.min(18 / TYPES[nextType].r, 1);
+    nctx.scale(scale, scale);
+    new GameObject(0, 0, nextType, true).draw(nctx);
+    nctx.restore();
 }
 
-function handleEvolution(a, b) {
-    if (a.typeIndex === TYPES.length - 1) {
-        for(let i=0; i<15; i++) particles.push(new Particle((a.x+b.x)/2, (a.y+b.y)/2, '#ffd1dc'));
-        objects = objects.filter(o => o !== a && o !== b);
-        score += 100;
-    } else {
-        const nIdx = a.typeIndex + 1;
-        const nx = (a.x + b.x) / 2; const ny = (a.y + b.y) / 2;
-        objects = objects.filter(o => o !== a && o !== b);
-        objects.push(new GameObject(nx, ny, nIdx));
-        score += TYPES[nIdx].score;
-    }
-    scoreEl.textContent = score;
+function checkCollision(a, b) {
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < a.r + b.r) {
+        if (a.typeIndex === b.typeIndex) {
+            if (a.typeIndex === TYPES.length - 1) {
+                for(let i=0; i<15; i++) particles.push(new Particle((a.x+b.x)/2, (a.y+b.y)/2, '#ffd1dc'));
+                objects = objects.filter(o => o !== a && o !== b);
+                score += 100; scoreEl.textContent = score;
+                return;
+            }
+            const nIdx = a.typeIndex + 1;
+            objects = objects.filter(o => o !== a && o !== b);
+            objects.push(new GameObject((a.x+b.x)/2, (a.y+b.y)/2, nIdx));
+            score += TYPES[nIdx].score; scoreEl.textContent = score;
+            return;
+        }
+        const angle = Math.atan2(dy, dx), overlap = (a.r + b.r) - dist;
+        a.x -= Math.cos(angle) * overlap * 0.5; a.y -= Math.sin(angle) * overlap * 0.5;
+        b.x += Math.cos(angle) * overlap * 0.5; b.y += Math.sin(angle) * overlap * 0.5;
+    }
 }
 
-function drawPreview(targetCtx, typeIdx) {
-    targetCtx.clearRect(0, 0, 50, 50);
-    if (typeIdx === null) return;
-    targetCtx.save(); targetCtx.translate(25, 25);
-    const scale = Math.min(18 / TYPES[typeIdx].r, 1);
-    targetCtx.scale(scale, scale);
-    new GameObject(0, 0, typeIdx, true).draw(targetCtx);
-    targetCtx.restore();
-}
-
-function performHold() {
-    if (!canHold || isGameOver || !gameStarted) return;
-    if (holdType === null) {
-        holdType = currentType;
-        currentType = nextType;
-        nextType = Math.floor(Math.random() * maxSpawnType);
-    } else {
-        const temp = currentType;
-        currentType = holdType;
-        holdType = temp;
-    }
-    canHold = false;
-    drawPreview(nctx, nextType);
-    drawPreview(hctx, holdType);
-}
-
+// 操作イベント（スマホ・PC共通）
 const handleMove = (e) => {
-    if (isGameOver || !gameStarted) return;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const rect = canvas.getBoundingClientRect();
-    currentX = Math.max(20, Math.min(canvas.width - 20, clientX - rect.left));
-    isTouching = true;
+    if (isGameOver) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const rect = canvas.getBoundingClientRect();
+    currentX = Math.max(20, Math.min(canvas.width - 20, clientX - rect.left));
+    isTouching = true;
 };
 
 const handleEnd = () => {
-    if (isGameOver || !isTouching || !gameStarted) return;
-    objects.push(new GameObject(currentX, 40, currentType));
-    currentType = nextType;
-    nextType = Math.floor(Math.random() * maxSpawnType);
-    canHold = true;
-    drawPreview(nctx, nextType);
-    isTouching = false;
+    if (isGameOver || !isTouching) return;
+    objects.push(new GameObject(currentX, 40, currentType));
+    currentType = nextType;
+    nextType = Math.floor(Math.random() * 3);
+    drawNext();
+    isTouching = false;
 };
 
 canvas.addEventListener('mousemove', handleMove);
@@ -356,44 +260,48 @@ canvas.addEventListener('touchmove', handleMove);
 canvas.addEventListener('mousedown', handleMove);
 canvas.addEventListener('mouseup', handleEnd);
 canvas.addEventListener('touchend', handleEnd);
-document.getElementById('hold-btn').addEventListener('click', (e) => { e.stopPropagation(); performHold(); });
-window.addEventListener('keydown', (e) => { if (e.code === 'ShiftLeft' || e.code === 'Space') performHold(); });
 
 function loop() {
-    if (isGameOver) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = '#ffccd5'; ctx.setLineDash([8, 4]); ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(0, 75); ctx.lineTo(canvas.width, 75); ctx.stroke();
-    
-    if (isTouching) {
-        ctx.strokeStyle = '#ffeef2'; ctx.setLineDash([5, 5]);
-        ctx.beginPath(); ctx.moveTo(currentX, 40); ctx.lineTo(currentX, canvas.height); ctx.stroke();
-    }
-    ctx.setLineDash([]);
+    if (isGameOver) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    ctx.save(); ctx.globalAlpha = canHold ? 0.6 : 0.3;
-    new GameObject(currentX, 40, currentType, true).draw();
-    ctx.restore();
+    // ゲームオーバー線 (上部70px)
+    ctx.strokeStyle = '#ffccd5'; ctx.setLineDash([8, 4]); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, 75); ctx.lineTo(canvas.width, 75); ctx.stroke();
+    
+    // 落下ガイド線
+    if (isTouching) {
+        ctx.strokeStyle = '#ffeef2'; ctx.setLineDash([5, 5]);
+        ctx.beginPath(); ctx.moveTo(currentX, 40); ctx.lineTo(currentX, canvas.height); ctx.stroke();
+    }
+    ctx.setLineDash([]);
 
-    particles = particles.filter(p => p.life > 0);
-    particles.forEach(p => { p.update(); p.draw(); });
+    // プレビュー
+    ctx.save(); ctx.globalAlpha = 0.5;
+    new GameObject(currentX, 40, currentType, true).draw();
+    ctx.restore();
 
-    solveCollisions();
+    particles = particles.filter(p => p.life > 0);
+    particles.forEach(p => { p.update(); p.draw(); });
 
-    let overLimit = false;
-    for (let i = 0; i < objects.length; i++) {
-        objects[i].update();
-        objects[i].draw();
-        if (objects[i].y - objects[i].r < 75 && Math.abs(objects[i].vy) < 0.5) overLimit = true;
-    }
+    let overLimit = false;
+    for (let i = 0; i < objects.length; i++) {
+        objects[i].update();
+        for (let j = i + 1; j < objects.length; j++) checkCollision(objects[i], objects[j]);
+        objects[i].draw();
+        if (objects[i].y - objects[i].r < 75 && Math.abs(objects[i].vy) < 0.2) overLimit = true;
+    }
 
-    if (overLimit) {
-        gameOverCounter++;
-        if (gameOverCounter > 120) { isGameOver = true; gameOverScreen.style.display = 'flex'; }
-    } else { gameOverCounter = 0; }
+    if (overLimit) {
+        gameOverCounter++;
+        if (gameOverCounter > 120) { isGameOver = true; gameOverScreen.style.display = 'flex'; }
+    } else { gameOverCounter = 0; }
 
-    requestAnimationFrame(loop);
+    requestAnimationFrame(loop);
 }
+
+drawNext();
+loop();
 </script>
 </body>
-</html>
+</html>　
